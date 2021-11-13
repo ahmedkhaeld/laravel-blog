@@ -3,27 +3,51 @@
 namespace App\Models; 
 
 use Illuminate\Support\Facades\File;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
 
 class Post 
 {
+    public $body;
+
+    public function __construct(
+        public $title, 
+        public $excerpt,
+        public $date ,
+        $body,
+        public $slug  
+    )
+    {
+        $this->body=$body;
+    }
+
+
+   
 
     public static function all()
     {
-        $files=File::files(resource_path("posts/"));
+        return cache()->rememberForever('posts.all', function(){
+            return collect(File::files(resource_path("posts")))
 
-        return array_map( fn($file)=> $file->getcontents(), $files);
+            ->map(fn($file)=>YamlFrontMatter::parseFile($file)) 
+    
+            ->map(fn($document)=>new Post(
+    
+                $document->title,
+                $document->excerpt,
+                $document->date,
+                $document->body(),
+                $document->slug
+            ))->sortByDesc('date');
+        
+        });
+       
     }
 
 
     public static function find($slug)
     {
-            //  fetch post path from resources folder, path not exists throw model not found exception
-        if(! file_exists($path=resource_path("posts/{$slug}.html"))){
-            return redirect('/');
-        }
-
-        //caching allowing avoid expensive access file_get_contents every time user clicks on a posts instead save it in memory
-        return cache()->remember("post.{$slug}", 1200 ,fn()=> file_get_contents($path));
+        // of all the blog posts, find the one with a slug that mathches the one that was requested
+        return static::all()->firstwhere('slug', $slug);
     }
 
 }
