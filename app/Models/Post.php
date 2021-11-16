@@ -42,5 +42,18 @@ class Post extends Model
             ->where('title', 'like', '%'. request('search') .'%')
             ->orWhere('body', 'like', '%' . request('search'). '%'));
 
+        // asking posts. posts give me the post that has a slug that is matching what user requested from the dropdown
+        $query->when($filters['search'] ?? false,  fn($query, $category)=>
+        $query->whereHas('category' ,fn($query)=>
+            $query-where('slug', $category))
+        );
+
+        // this long query equal to the above two lines
+//            ->whereExists(fn($query)=>
+//            $query->from('categories')
+//            ->whereColumn('categories', 'posts.category_id')
+//            ->where('categories.slug', $category))
+//            );
+
     }
 }
