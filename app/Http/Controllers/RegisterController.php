@@ -20,7 +20,10 @@ class RegisterController extends Controller
             'password'=>'required'
         ]);
 
-        User::create($attributes);
+        $user=User::create($attributes);
+
+        //log the user in after create the account
+        auth()->login($user);
 
         // redirect home with a flash message of success
         return redirect('/')->with('success', 'Your account has been created. ');
