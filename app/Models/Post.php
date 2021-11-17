@@ -14,6 +14,9 @@ class Post extends Model
 
     protected $with=['category', 'author'];
 
+    /**
+     * @return BelongsTo category
+     */
     public function category(): BelongsTo
     {
         // post belongs to one category
@@ -38,22 +41,26 @@ class Post extends Model
      */
     public function scopeFilter($query, array $filters)
     {
-        $query->when($filters['search'] ?? false,  fn($query, $search)=>$query
-            ->where('title', 'like', '%'. request('search') .'%')
-            ->orWhere('body', 'like', '%' . request('search'). '%'));
+        $query->when($filters['search'] ?? false, fn($query, $search) =>
+            $query->where( fn($query) =>
+                $query->where('title', 'like', '%' . $search . '%')
+                      ->orWhere('body', 'like', '%' . $search . '%')
+            )
+        );
 
         // asking posts. posts give me the post that has a slug that is matching what user requested from the dropdown
         $query->when($filters['search'] ?? false,  fn($query, $category)=>
         $query->whereHas('category' ,fn($query)=>
-            $query-where('slug', $category))
+            $query->where('slug', $category))
         );
 
-        // this long query equal to the above two lines
-//            ->whereExists(fn($query)=>
-//            $query->from('categories')
-//            ->whereColumn('categories', 'posts.category_id')
-//            ->where('categories.slug', $category))
-//            );
+
+        $query->when($filters['author'] ?? false,  fn($query, $author)=>
+        $query->whereHas('author' ,fn($query)=>
+            $query->where('username', $author))
+        );
+
+
 
     }
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Post;
-use Illuminate\Http\Request;
+
 
 class PostController extends Controller
 {
@@ -12,16 +12,17 @@ class PostController extends Controller
     {
 
 
-        return view('posts', [
-            'posts'=>Post::latest()->filter(request(['search', 'category']))->get(),
+        return view('posts.index', [
+            'posts'=>Post::latest()->filter(request(['search', 'category', 'author']))->get(),
+
             'categories'=>Category::all(),
-            'currentCategory'=>Category::firstWhere('slug', request('category'))
+            'currentCategory'=>Category::where('slug', request('category'))->first()
         ]);
     }
 
     public function  show(Post $post)
     {
-        return view('post', [
+        return view('posts.show', [
             'post'=>$post
         ]);
     }
